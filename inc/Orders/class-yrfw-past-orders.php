@@ -28,8 +28,9 @@ class YRFW_Past_Orders extends YRFW_Orders {
 			$yrfw_logger->debug( "Timeframe is from $timeframe[from] to $timeframe[to]" );
 			$args        = array(
 				'limit'        => -1,
-				'status'       => 'completed', // @ToDo: add custom status support
-				'type'         => 'shop_order',
+				'status' => array('wc-processing', 'wc-on-hold', 'wc-completed'),
+				//'status'       => 'completed', // @ToDo: add custom status support
+				//'type'         => 'shop_order',
 				'date_created' => "$timeframe[to]...$timeframe[from]",
 			);
 			$query       = new WC_Order_Query( $args );
@@ -39,13 +40,45 @@ class YRFW_Past_Orders extends YRFW_Orders {
 		}
 	}
 
+	public function get_past_orders_v3(int $days = 180) {
+		global $yrfw_logger, $product_map;
+		$timeframe   = [
+			'to'   => date('Y-m-d', strtotime('-' . $days . ' days')),
+			'from' => date('Y-m-d'), // today.
+		];
+		$order_array = $this->get_orders_for_timeframe($timeframe);
+		$past_orders = array();
+		foreach ($order_array as $order) {
+			$order_data = parent::get_single_order_data($order);
+			if (!is_null($order_data)) {
+				$past_orders[] = $order_data;
+			}
+		}
+		$yrfw_logger->debug("full order array: " . print_r($order_array, true));
+		unset($query, $orders);
+		if (count($past_orders) > 0) {
+			$chunks = array_chunk($past_orders, 300);
+			$result = array();
+			foreach ($chunks as $index => $chunk) {
+				$result[$index] = array(
+					'orders'            => $chunk,
+					'platform'          => 'woocommerce',
+					'extension_version' => YRFW_PLUGIN_VERSION,
+					'validate_data'     => false,
+				);
+			}
+			unset($past_orders, $product_map);
+		}
+		return $result;
+	}
+
 	/**
 	 * Get order information and chunk them for given timeframe (def. 90 days)
 	 *
 	 * @param integer $days how many days to query for.
 	 * @return array        orders with info divided by chunks
 	 */
-	public function get_past_orders( int $days = 90 ) : array {
+	public function get_past_orders( int $days = 180 ) : array {
 		global $yrfw_logger, $product_map;
 		$timeframe   = [
 			'to'   => date( 'Y-m-d', strtotime( '-' . $days . ' days' ) ),
@@ -60,6 +93,7 @@ class YRFW_Past_Orders extends YRFW_Orders {
 			}
 		}
 		unset( $query, $orders );
+		$yrfw_logger->debug("full order array: " . print_r($order_array, true));
 		if ( count( $past_orders ) > 0 ) {
 			$chunks = array_chunk( $past_orders, 300 );
 			$result = array();
