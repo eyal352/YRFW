@@ -221,13 +221,13 @@ class YRFW_Actions
 
 // Begin port of functions previously added to functions.php file
 
-/* Inline script printed out in the footer */
+/* Inline script printed out in the footer for the insertion of SMSBUMP scripts */
 add_action('wp_footer', 'sms_library');
 function sms_library()
 {
 ?>
-	<script type="text/javascript" src="https://dhv2ziothpgrr.cloudfront.net/273026/form_40991.js?ver=1621505879"></script>
-	<script type="text/javascript" src="https://dhv2ziothpgrr.cloudfront.net/273026/form_42790.js?ver=1621506016"></script>
+	<script type="text/javascript" src=""></script>
+	<script type="text/javascript" src=""></script>
 <?php
 }
 
